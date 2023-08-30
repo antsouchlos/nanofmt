@@ -32,31 +32,31 @@ TEST(FormatDecimal, positive_int) {
     EXPECT_EQ(control5, formatted5);
 }
 
-// TEST(FormatDecimal, negative_int) {
-//     constexpr std::array<char, 8> control1   = {'-', '0', '0', '0',
-//                                               '0', '0', '0', '2'};
-//     std::array<char, 8> formatted1 = format<"{:08}">(-2);
+TEST(FormatDecimal, negative_int) {
+    constexpr std::array<char, 8> control1   = {'-', '0', '0', '0',
+                                              '0', '0', '0', '2'};
+    std::array<char, 8> formatted1 = format<"{:08}">(-2);
 
-//     constexpr std::array<char, 8> control2   = {' ', ' ', '-', '2',
-//                                               '2', '2', '2', '2'};
-//     std::array<char, 8> formatted2 = format<"{:8}">(-22222);
+    constexpr std::array<char, 8> control2   = {' ', ' ', '-', '2',
+                                              '2', '2', '2', '2'};
+    std::array<char, 8> formatted2 = format<"{:8}">(-22222);
 
-//     constexpr std::array<char, 8> control3   = {'-', '0', '0', '1',
-//                                               '2', '3', '4', '5'};
-//     std::array<char, 8> formatted3 = format<"{:08.4}">(-12345);
+    constexpr std::array<char, 8> control3   = {'-', '0', '0', '1',
+                                              '2', '3', '4', '5'};
+    std::array<char, 8> formatted3 = format<"{:08.4}">(-12345);
 
-//     constexpr std::array<char, 5> control4   = {'-', '6', '7', '8', '9'};
-//     std::array<char, 5> formatted4 = format<"{:5}">(-6789);
+    constexpr std::array<char, 5> control4   = {'-', '6', '7', '8', '9'};
+    std::array<char, 5> formatted4 = format<"{:5}">(-6789);
 
-//     constexpr std::array<char, 5> control5   = {'-', 'f', 'f', 'f', 'f'};
-//     std::array<char, 5> formatted5 = format<"{:05}">(-66789);
+    constexpr std::array<char, 5> control5   = {'-', 'x', 'x', 'x', 'x'};
+    std::array<char, 5> formatted5 = format<"{:05}">(-66789);
 
-//     EXPECT_EQ(control1, formatted1);
-//     EXPECT_EQ(control2, formatted2);
-//     EXPECT_EQ(control3, formatted3);
-//     EXPECT_EQ(control4, formatted4);
-//     EXPECT_EQ(control5, formatted5);
-// }
+    EXPECT_EQ(control1, formatted1);
+    EXPECT_EQ(control2, formatted2);
+    EXPECT_EQ(control3, formatted3);
+    EXPECT_EQ(control4, formatted4);
+    EXPECT_EQ(control5, formatted5);
+}
 
 // TEST(FormatDecimal, positive_float) {
 //     constexpr std::array<char, 8> control1   = {'0', '0', '2', '.',

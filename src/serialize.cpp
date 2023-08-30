@@ -117,8 +117,7 @@ constexpr inline unsigned get_base_divisor(FormatType formatType) {
     }
 }
 
-template <typename uint_t>
-constexpr inline void format_base(char* out, uint_t value, int size,
+constexpr inline void format_base(char* out, uint64_t value, int size,
                                   FormatType formatType) {
 
     /// Ensure the number fits into the allocated space
@@ -154,17 +153,44 @@ constexpr inline void format_base(char* out, uint_t value, int size,
 }
 
 
+constexpr std::pair<uint32_t, bool> get_abs_value(int64_t value) {
+    auto abs_value = static_cast<uint32_t>(value);
+
+    const bool negative = value < 0;
+    if (negative) abs_value = 0 - abs_value;
+
+    return {abs_value, negative};
+}
+
+
 } // namespace
 
 
 namespace nanofmt { namespace nanofmt_detail {
 
 
-// TODO: Handle overflow
-void serialize(char* templateStr, unsigned long long arg,
-               RepFieldData repFieldData) {
-    format_base(templateStr + repFieldData.startIndex, arg,
-                repFieldData.getWidth(), repFieldData.type);
+void serialize(char* templateStr, int64_t arg, RepFieldData repFieldData) {
+    char* out = templateStr + repFieldData.startIndex;
+
+    /// Format number
+
+    const auto [abs_value, negative] = get_abs_value(arg);
+
+    format_base(templateStr + repFieldData.startIndex + 1 * (negative),
+                abs_value, repFieldData.width - 1 * (negative),
+                repFieldData.type);
+
+    /// Handle sign
+
+    const std::size_t n_digits =
+        count_digits_base(abs_value, repFieldData.type);
+
+    if (repFieldData.has_zero_padding) {
+        if (negative) *(out) = '-';
+    } else {
+        if (n_digits < repFieldData.width)
+            if (negative) *(out + repFieldData.width - n_digits - 1) = '-';
+    }
 }
 
 // // TODO: Handle overflow
@@ -174,15 +200,15 @@ void serialize(char* templateStr, unsigned long long arg,
 //                 repFieldData.type);
 // }
 
-void serialize(char* templateStr, float arg, RepFieldData repFieldData) {
-    for (int i = 0; i < repFieldData.width; ++i)
-        templateStr[repFieldData.startIndex + i] = 'f';
-}
+// void serialize(char* templateStr, float arg, RepFieldData repFieldData) {
+//     for (int i = 0; i < repFieldData.width; ++i)
+//         templateStr[repFieldData.startIndex + i] = 'f';
+// }
 
-void serialize(char* templateStr, const char* arg, RepFieldData repFieldData) {
-    for (int i = 0; i < repFieldData.width; ++i)
-        templateStr[repFieldData.startIndex + i] = 's';
-}
+// void serialize(char* templateStr, const char* arg, RepFieldData repFieldData) {
+//     for (int i = 0; i < repFieldData.width; ++i)
+//         templateStr[repFieldData.startIndex + i] = 's';
+// }
 
 
 }} // namespace nanofmt::nanofmt_detail
