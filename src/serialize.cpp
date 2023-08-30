@@ -1,0 +1,183 @@
+#include <stdint.h>
+#include <string.h>
+
+#include <nanofmt/serialize.h>
+#include <nanofmt/types.h>
+#include <nanofmt/utility.h>
+
+
+/*
+ *
+ * ****************************************************************
+ * Disclaimer: Most of this code is shamelessly stolen from fmtlib
+ * ****************************************************************
+ *
+ */
+
+
+namespace {
+
+
+using namespace nanofmt;
+using namespace nanofmt::nanofmt_detail;
+
+
+#define FMT_POWERS_OF_10(factor)                                               \
+    factor * 10, (factor)*100, (factor)*1000, (factor)*10000, (factor)*100000, \
+        (factor)*1000000, (factor)*10000000, (factor)*100000000,               \
+        (factor)*1000000000
+
+template <typename T>
+constexpr int count_digits_decimal_fallback(T n) {
+    int count = 1;
+    for (;;) {
+        if (n < 10) return count;
+        if (n < 100) return count + 1;
+        if (n < 1000) return count + 2;
+        if (n < 10000) return count + 3;
+        n /= 10000u;
+        count += 4;
+    }
+}
+
+inline int do_count_digits_decimal(uint64_t n) {
+    // Maps bsr(n) to ceil(log10(pow(2, bsr(n) + 1) - 1)).
+    static constexpr uint8_t bsr2log10[] = {
+        1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,
+        6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9,  10, 10, 10,
+        10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15,
+        15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20};
+    auto                            t = bsr2log10[__builtin_clzll(n | 1) ^ 63];
+    static constexpr const uint64_t zero_or_powers_of_10[] = {
+        0, 0, FMT_POWERS_OF_10(1U), FMT_POWERS_OF_10(1000000000ULL),
+        10000000000000000000ULL};
+    return t - (n < zero_or_powers_of_10[t]);
+}
+
+// template <FormatType t_format_type>
+// constexpr inline auto count_digits_base(uint64_t n) -> int {
+//     if constexpr (t_format_type == FormatType::b) {
+//         int result = 0;
+
+//         while (n) {
+//             n = n >> 1;
+//             result += 1;
+//         }
+
+//         return result;
+//     } else {
+//         if constexpr (t_format_type == FormatType::x) {
+//             int result = 0;
+
+//             while (n) {
+//                 n = n >> 4;
+//                 result += 1;
+//             }
+
+//             return (result + count_digits_base<FormatType::b>(n));
+//         } else {
+//             if (!std::is_constant_evaluated()) {
+//                 return do_count_digits_decimal(n);
+//             }
+//             return count_digits_decimal_fallback(n);
+//         }
+//     }
+// }
+
+
+// Converts value in the range [0, base^2) to a string.
+constexpr inline const char* digits2_base(size_t value, FormatType formatType) {
+    // GCC generates slightly better code when value is pointer-size.
+    if (formatType == FormatType::b) {
+        return &"00011011"[value * 2];
+    } else {
+        if (formatType == FormatType::x) {
+            // clang-format off
+            return &"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F"
+                    "202122232425262728292A2B2C2D2E2F303132333435363738393A3B3C3D3E3F"
+                    "404142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F"
+                    "606162636465666768696A6B6C6D6E6F707172737475767778797A7B7C7D7E7F"
+                    "808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F"
+                    "A0A1A2A3A4A5A6A7A8A9AAABACADAEAFB0B1B2B3B4B5B6B7B8B9BABBBCBDBEBF"
+                    "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECFD0D1D2D3D4D5D6D7D8D9DADBDCDDDEDF"
+                    "E0E1E2E3E4E5E6E7E8E9EAEBECEDEEEFF0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF"[value * 2];
+            // clang-format on
+        } else {
+            return &"0001020304050607080910111213141516171819"
+                    "2021222324252627282930313233343536373839"
+                    "4041424344454647484950515253545556575859"
+                    "6061626364656667686970717273747576777879"
+                    "8081828384858687888990919293949596979899"[value * 2];
+        }
+    }
+}
+
+
+constexpr inline void copy2(char* dst, const char* src) {
+    if (!std::is_constant_evaluated()) {
+        memcpy(dst, src, 2);
+        return;
+    }
+    *dst++ = static_cast<char>(*src++);
+    *dst   = static_cast<char>(*src);
+}
+
+constexpr inline unsigned get_base_divisor(FormatType formatType) {
+    switch (formatType) {
+    case FormatType::b:
+        return 2;
+    case FormatType::x:
+        return 16;
+    default:
+        return 10;
+    }
+}
+
+// TODO: Check length
+template <typename uint_t>
+constexpr inline void format_base(char* out, uint_t value, int size,
+                                  FormatType formatType) {
+    unsigned divisor        = get_base_divisor(formatType);
+    unsigned square_divisor = const_pow(divisor, 2);
+
+    out += size;
+    while (value >= square_divisor) {
+        out -= 2;
+        copy2(out, digits2_base(static_cast<size_t>(value % square_divisor),
+                                formatType));
+        value /= square_divisor;
+    }
+
+    if (value < divisor) {
+        *--out = digits2_base(value * divisor, formatType)[0];
+        return;
+    }
+
+    out -= 2;
+    copy2(out, digits2_base(static_cast<size_t>(value), formatType));
+}
+
+
+} // namespace
+
+
+namespace nanofmt { namespace nanofmt_detail {
+
+
+void serialize(char* templateStr, unsigned arg, RepFieldData repFieldData) {
+    format_base(templateStr + repFieldData.startIndex, arg, repFieldData.getWidth(),
+                repFieldData.type);
+}
+
+void serialize(char* templateStr, float arg, RepFieldData repFieldData) {
+    for (int i = 0; i < repFieldData.width; ++i)
+        templateStr[repFieldData.startIndex + i] = 'f';
+}
+
+void serialize(char* templateStr, const char* arg, RepFieldData repFieldData) {
+    for (int i = 0; i < repFieldData.width; ++i)
+        templateStr[repFieldData.startIndex + i] = 's';
+}
+
+
+}} // namespace nanofmt::nanofmt_detail
