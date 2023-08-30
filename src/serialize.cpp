@@ -27,62 +27,46 @@ using namespace nanofmt::nanofmt_detail;
         (factor)*1000000, (factor)*10000000, (factor)*100000000,               \
         (factor)*1000000000
 
-template <typename T>
-constexpr int count_digits_decimal_fallback(T n) {
-    int count = 1;
-    for (;;) {
-        if (n < 10) return count;
-        if (n < 100) return count + 1;
-        if (n < 1000) return count + 2;
-        if (n < 10000) return count + 3;
-        n /= 10000u;
-        count += 4;
-    }
-}
-
-inline int do_count_digits_decimal(uint64_t n) {
+inline int count_digits_decimal(uint64_t n) {
     // Maps bsr(n) to ceil(log10(pow(2, bsr(n) + 1) - 1)).
     static constexpr uint8_t bsr2log10[] = {
         1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,
         6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9,  10, 10, 10,
         10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15,
         15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20};
-    auto                            t = bsr2log10[__builtin_clzll(n | 1) ^ 63];
+
+    auto t = bsr2log10[__builtin_clzll(n | 1) ^ 63];
+
     static constexpr const uint64_t zero_or_powers_of_10[] = {
         0, 0, FMT_POWERS_OF_10(1U), FMT_POWERS_OF_10(1000000000ULL),
         10000000000000000000ULL};
+
     return t - (n < zero_or_powers_of_10[t]);
 }
 
-// template <FormatType t_format_type>
-// constexpr inline auto count_digits_base(uint64_t n) -> int {
-//     if constexpr (t_format_type == FormatType::b) {
-//         int result = 0;
+constexpr inline int count_digits_base(uint64_t n, FormatType formatType) {
+    if (formatType == FormatType::b) {
+        int result = 0;
 
-//         while (n) {
-//             n = n >> 1;
-//             result += 1;
-//         }
+        while (n) {
+            n = n >> 1;
+            result += 1;
+        }
 
-//         return result;
-//     } else {
-//         if constexpr (t_format_type == FormatType::x) {
-//             int result = 0;
+        return result;
+    } else if (formatType == FormatType::x) {
+        int result = 0;
 
-//             while (n) {
-//                 n = n >> 4;
-//                 result += 1;
-//             }
+        while (n) {
+            n = n >> 4;
+            result += 1;
+        }
 
-//             return (result + count_digits_base<FormatType::b>(n));
-//         } else {
-//             if (!std::is_constant_evaluated()) {
-//                 return do_count_digits_decimal(n);
-//             }
-//             return count_digits_decimal_fallback(n);
-//         }
-//     }
-// }
+        return result;
+    } else {
+        return count_digits_decimal(n);
+    }
+}
 
 
 // Converts value in the range [0, base^2) to a string.
@@ -133,10 +117,22 @@ constexpr inline unsigned get_base_divisor(FormatType formatType) {
     }
 }
 
-// TODO: Check length
 template <typename uint_t>
 constexpr inline void format_base(char* out, uint_t value, int size,
                                   FormatType formatType) {
+
+    /// Ensure the number fits into the allocated space
+
+    int n_digits = count_digits_base(value, formatType);
+    if (n_digits > size) {
+        for (int i = 0; i < size; ++i) {
+            *(out++) = 'x';
+        }
+        return;
+    }
+
+    /// Format number
+
     unsigned divisor        = get_base_divisor(formatType);
     unsigned square_divisor = const_pow(divisor, 2);
 
@@ -164,10 +160,19 @@ constexpr inline void format_base(char* out, uint_t value, int size,
 namespace nanofmt { namespace nanofmt_detail {
 
 
-void serialize(char* templateStr, unsigned arg, RepFieldData repFieldData) {
-    format_base(templateStr + repFieldData.startIndex, arg, repFieldData.getWidth(),
-                repFieldData.type);
+// TODO: Handle overflow
+void serialize(char* templateStr, unsigned long long arg,
+               RepFieldData repFieldData) {
+    format_base(templateStr + repFieldData.startIndex, arg,
+                repFieldData.getWidth(), repFieldData.type);
 }
+
+// // TODO: Handle overflow
+// void serialize(char* templateStr, unsigned arg, RepFieldData repFieldData) {
+//     format_base(templateStr + repFieldData.startIndex, arg,
+//     repFieldData.getWidth(),
+//                 repFieldData.type);
+// }
 
 void serialize(char* templateStr, float arg, RepFieldData repFieldData) {
     for (int i = 0; i < repFieldData.width; ++i)
