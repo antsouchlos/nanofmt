@@ -107,11 +107,7 @@ consteval inline RepFieldData parseRepField(std::size_t startIndex) {
 
     if (consume('}')) return adjust_stop_index(result);
 
-    if (consume('s'))
-        result.type = FormatType::s;
-    else if (consume('c'))
-        result.type = FormatType::c;
-    else if (consume('b'))
+    if (consume('b'))
         result.type = FormatType::b;
     else if (consume('d'))
         result.type = FormatType::d;

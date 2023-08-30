@@ -60,7 +60,7 @@ TEST(Pars, overall) {
     constexpr auto fmtData3 =
         nanofmt::nanofmt_detail::generate_fmt_data<"{:8.2b}">();
     constexpr auto fmtData4 =
-        nanofmt::nanofmt_detail::generate_fmt_data<"{:56.34s}">();
+        nanofmt::nanofmt_detail::generate_fmt_data<"{:56.34d}">();
     constexpr auto fmtData5 =
         nanofmt::nanofmt_detail::generate_fmt_data<"{:01234x}">();
     constexpr auto fmtData6 =
@@ -88,7 +88,7 @@ TEST(Pars, overall) {
     EXPECT_EQ(fmtData4[0].has_zero_padding, false);
     EXPECT_EQ(fmtData4[0].width, 56);
     EXPECT_EQ(fmtData4[0].precision, 34);
-    EXPECT_EQ(fmtData4[0].type, nanofmt::nanofmt_detail::FormatType::s);
+    EXPECT_EQ(fmtData4[0].type, nanofmt::nanofmt_detail::FormatType::d);
 
     EXPECT_EQ(fmtData5[0].valid, true);
     EXPECT_EQ(fmtData5[0].has_zero_padding, true);

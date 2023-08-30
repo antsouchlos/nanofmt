@@ -47,7 +47,7 @@ template <std::size_t N>
 ConstString(const char (&)[N]) -> ConstString<N>;
 
 
-enum class FormatType { def, s, c, b, d, o, x, f };
+enum class FormatType { def, b, d, x, f };
 
 
 struct RepFieldData {
