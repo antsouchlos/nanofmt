@@ -193,21 +193,51 @@ void serialize(char* templateStr, int64_t arg, RepFieldData repFieldData) {
     }
 }
 
-// // TODO: Handle overflow
-// void serialize(char* templateStr, unsigned arg, RepFieldData repFieldData) {
-//     format_base(templateStr + repFieldData.startIndex, arg,
-//     repFieldData.getWidth(),
-//                 repFieldData.type);
+void serialize(char* templateStr, double arg, RepFieldData repFieldData) {
+    char* out = templateStr + repFieldData.startIndex;
+
+
+}
+
+// template <fmt_data_t t_fmt_node, std::floating_point float_t>
+// constexpr inline void format_float(char* out, float_t value) {
+//     // clang-format off
+//     constexpr fmt_data_t fmt_node_integral = {
+//         t_fmt_node.has_zero_padding,                  // has_zero_padding
+//         t_fmt_node.length - t_fmt_node.precision - 1, // length
+//         t_fmt_node.precision,                         // ignored
+//         FormatType::d,                                // type
+//         t_fmt_node.position                           // ignored
+//     };
+//     constexpr fmt_data_t fmt_node_fractional = {
+//         true,                                         // has_zero_padding
+//         t_fmt_node.precision,                         // length
+//         t_fmt_node.precision,                         // ignored
+//         FormatType::d,                                // type
+//         t_fmt_node.position                           // ignored
+//     };
+//     // clang-format on
+
+//     *(out + t_fmt_node.length - t_fmt_node.precision - 1) = '.';
+
+//     const int integral = static_cast<int>(value);
+
+//     constexpr std::size_t factor = const_pow(10, t_fmt_node.precision);
+//     const int fractional = static_cast<int>((value - integral) * factor);
+
+//     const auto [fractional_abs, fractional_negative] =
+//         get_abs_value(fractional);
+
+//     format_int<fmt_node_integral, int>(out, integral);
+//     format_int<fmt_node_fractional, uint16_t>(
+//         out + t_fmt_node.length - t_fmt_node.precision, fractional_abs);
 // }
 
-// void serialize(char* templateStr, float arg, RepFieldData repFieldData) {
-//     for (int i = 0; i < repFieldData.width; ++i)
-//         templateStr[repFieldData.startIndex + i] = 'f';
-// }
 
-// void serialize(char* templateStr, const char* arg, RepFieldData repFieldData) {
-//     for (int i = 0; i < repFieldData.width; ++i)
-//         templateStr[repFieldData.startIndex + i] = 's';
+// void serialize(char* templateStr, unsigned long long arg, RepFieldData repFieldData) {
+//     char* out = templateStr + repFieldData.startIndex;
+
+//     format_base(out, arg, repFieldData.getWidth(), repFieldData.type);
 // }
 
 
