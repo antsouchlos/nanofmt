@@ -189,7 +189,7 @@ void serialize_signed(char* templateStr, int64_t arg,
     const auto [abs_value, negative] = get_abs_value(arg);
 
     format_base(templateStr + repFieldData.startIndex + 1 * (negative),
-                abs_value, repFieldData.width - 1 * (negative),
+                abs_value, repFieldData.getWidth() - 1 * (negative),
                 repFieldData.type);
 
     /// Handle sign
@@ -200,8 +200,8 @@ void serialize_signed(char* templateStr, int64_t arg,
     if (repFieldData.has_zero_padding) {
         if (negative) *(out) = '-';
     } else {
-        if (n_digits < repFieldData.width)
-            if (negative) *(out + repFieldData.width - n_digits - 1) = '-';
+        if (n_digits < repFieldData.getWidth())
+            if (negative) *(out + repFieldData.getWidth() - n_digits - 1) = '-';
     }
 }
 
@@ -213,29 +213,29 @@ void serialize_double(char* templateStr, double arg,
     // clang-format off
     const RepFieldData fmtDataIntegral = {
         .has_zero_padding = repFieldData.has_zero_padding,
-        .width            = repFieldData.width - repFieldData.precision - 1,
-        .precision        = repFieldData.precision,
+        .width            = repFieldData.getWidth() - repFieldData.getPrecision() - 1,
+        .precision        = repFieldData.getPrecision(),
         .type             = FormatType::d,
         .valid            = true,
         .startIndex       = repFieldData.startIndex,
-        .stopIndex        = repFieldData.startIndex + repFieldData.width - repFieldData.precision - 1
+        .stopIndex        = repFieldData.startIndex + repFieldData.getWidth() - repFieldData.getPrecision() - 1
     };
     const RepFieldData fmtDataFractional = {
         .has_zero_padding = true,
-        .width            = repFieldData.precision,
+        .width            = repFieldData.getPrecision(),
         .precision        = 0, // ignored
         .type             = FormatType::d,
         .valid            = true,
-        .startIndex       = repFieldData.startIndex + repFieldData.width - repFieldData.precision,
-        .stopIndex        = repFieldData.startIndex + repFieldData.width
+        .startIndex       = repFieldData.startIndex + repFieldData.getWidth() - repFieldData.getPrecision(),
+        .stopIndex        = repFieldData.startIndex + repFieldData.getWidth()
     };
     // clang-format on
 
-    *(out + repFieldData.width - repFieldData.precision - 1) = '.';
+    *(out + repFieldData.getWidth() - repFieldData.getPrecision() - 1) = '.';
 
     const int64_t integral = static_cast<int64_t>(arg);
 
-    const uint64_t factor = const_pow(10, repFieldData.precision);
+    const uint64_t factor = const_pow(10, repFieldData.getPrecision());
 
     const int64_t fractional = static_cast<int64_t>((arg - integral) * factor);
 

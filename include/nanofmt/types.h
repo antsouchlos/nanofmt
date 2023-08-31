@@ -73,10 +73,10 @@ struct RepFieldData {
     }
 
     constexpr std::size_t getPrecision() const {
-        if (width == 0)
-            return def().width;
+        if (precision == 0)
+            return def().precision;
         else
-            return width;
+            return precision;
     }
 
     constexpr static RepFieldData invalid() {
