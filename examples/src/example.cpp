@@ -6,7 +6,6 @@
 int main() {
     using namespace nanofmt;
     
-    // auto str = format<"This is a {:08.3} test. {:024.6f} fdsa sda as {:12s}">(56, 78.0f, "asf");
     auto str = format<"someList: [{:08.2}, 0b{:06b}, {}]\n"
                       "int: {:6}\n"
                       "float: {:8.4}\n"

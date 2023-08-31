@@ -19,21 +19,21 @@ void serialize_double(char* templateStr, double arg,
 
 
 template <std::unsigned_integral uint_t>
-constexpr inline void serialize(char* templateStr, uint_t arg,
+inline void serialize(char* templateStr, uint_t arg,
                                 RepFieldData repFieldData) {
 
     serialize_unsigned(templateStr, arg, repFieldData);
 }
 
 template <std::signed_integral uint_t>
-constexpr inline void serialize(char* templateStr, uint_t arg,
+inline void serialize(char* templateStr, uint_t arg,
                                 RepFieldData repFieldData) {
 
     serialize_signed(templateStr, arg, repFieldData);
 }
 
 template <std::floating_point uint_t>
-constexpr inline void serialize(char* templateStr, uint_t arg,
+inline void serialize(char* templateStr, uint_t arg,
                                 RepFieldData repFieldData) {
 
     serialize_double(templateStr, arg, repFieldData);

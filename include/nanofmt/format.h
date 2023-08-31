@@ -94,6 +94,7 @@ consteval inline auto adjust_fmt_data_indices() {
  * @brief Format the arguments according to the format spec and write the into
  * the corresponding placeholder in the preciously generated string template
  */
+// TODO: Validate arg types against format specs
 template <std::array t_str_template, std::array t_fmt_data, typename... args_t>
 inline auto populate_template(args_t... args) {
     /// Adjust the start and stop indices to match the output instead of the
@@ -113,14 +114,15 @@ inline auto populate_template(args_t... args) {
     return result;
 }
 
-template<std::array t_fmt_data, int I = 0>
+template <std::array t_fmt_data, int I = 0>
 consteval void validate_fmt_data() {
-    static_assert(t_fmt_data[I].valid == true, "Syntax error in format specification: ");
+    static_assert(t_fmt_data[I].valid == true,
+                  "Syntax error in format specification: ");
 
     // TODO: Various other checks (precision > width, etc.)
 
-    if constexpr (I+1 < t_fmt_data.size())
-        validate_fmt_data<t_fmt_data, I+1>();
+    if constexpr (I + 1 < t_fmt_data.size())
+        validate_fmt_data<t_fmt_data, I + 1>();
 }
 
 
@@ -141,7 +143,7 @@ template <nanofmt_detail::ConstString t_s, typename... args_t>
 inline auto format(args_t... args) {
     using namespace nanofmt_detail;
 
-    constexpr auto fmtData     = generate_fmt_data<t_s>();
+    constexpr auto fmtData = generate_fmt_data<t_s>();
     validate_fmt_data<fmtData>();
 
     constexpr auto templateStr = generate_string_template<t_s, fmtData>();
