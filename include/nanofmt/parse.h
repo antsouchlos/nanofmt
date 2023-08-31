@@ -68,7 +68,8 @@ template <ConstString t_s>
 consteval inline RepFieldData parseRepField(std::size_t startIndex) {
     /// Variable initialization and helper constructs
 
-    RepFieldData result{.startIndex = startIndex};
+    RepFieldData result;
+    result.setStartIndex(startIndex);
     std::size_t  parseIndex = startIndex;
 
     auto match   = [&parseIndex](char c) { return t_s[parseIndex] == c; };
@@ -80,7 +81,7 @@ consteval inline RepFieldData parseRepField(std::size_t startIndex) {
     };
     auto adjust_stop_index = [&parseIndex](const RepFieldData& repFieldData) {
         RepFieldData result{repFieldData};
-        result.stopIndex = parseIndex;
+        result.setStopIndex(parseIndex);
         return result;
     };
 
@@ -96,25 +97,25 @@ consteval inline RepFieldData parseRepField(std::size_t startIndex) {
 
     if (!consume(':')) return RepFieldData::invalid();
 
-    if (consume('0')) result.has_zero_padding = true;
+    if (consume('0')) result.setZeroPadding(true);
 
     while (!match('.') && !match('}') && match_num())
-        update_number(result.width, t_s[parseIndex++]);
+        update_number(result.mWidth, t_s[parseIndex++]);
 
     if (consume('.'))
         while (match_num())
-            update_number(result.precision, t_s[parseIndex++]);
+            update_number(result.mPrecision, t_s[parseIndex++]);
 
     if (consume('}')) return adjust_stop_index(result);
 
     if (consume('b'))
-        result.type = FormatType::b;
+        result.setType(FormatType::b);
     else if (consume('d'))
-        result.type = FormatType::d;
+        result.setType(FormatType::d);
     else if (consume('x'))
-        result.type = FormatType::x;
+        result.setType(FormatType::x);
     else if (consume('f'))
-        result.type = FormatType::f;
+        result.setType(FormatType::f);
 
     if (!consume('}')) return RepFieldData::invalid();
 

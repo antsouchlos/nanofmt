@@ -51,46 +51,41 @@ enum class FormatType { def, b, d, x, f };
 
 
 struct RepFieldData {
-    /// Format specification
+    bool        mZeroPadding = false;
+    std::size_t mWidth       = 0;
+    std::size_t mPrecision   = 0;
+    FormatType  mType        = FormatType::def;
 
-    bool        has_zero_padding = false;
-    std::size_t width            = 0;
-    std::size_t precision        = 0;
-    FormatType  type             = FormatType::def;
+    bool        mValid     = true;
+    std::size_t mStartIndex = 0;
+    std::size_t mStopIndex  = 0;
 
-    /// Metadata
+    // clang-format off
+    constexpr void setWidth(std::size_t width)             { mWidth = width; }
+    constexpr void setPrecision(std::size_t precision)     { mPrecision = precision; }
+    constexpr void setZeroPadding(std::size_t zeroPadding) { mZeroPadding = zeroPadding; }
+    constexpr void setType(FormatType type)                { mType = type; }
+    constexpr void setStartIndex(std::size_t startIndex)   { mStartIndex = startIndex; }
+    constexpr void setStopIndex(std::size_t stopIndex)     { mStopIndex = stopIndex; }
 
-    bool valid = true;
-
-    std::size_t startIndex = 0;
-    std::size_t stopIndex  = 0;
-
-    constexpr std::size_t getWidth() const {
-        if (width == 0)
-            return def().width;
-        else
-            return width;
-    }
-
-    constexpr std::size_t getPrecision() const {
-        if (precision == 0)
-            return def().precision;
-        else
-            return precision;
-    }
+    constexpr std::size_t getWidth()       const { return (mWidth != 0) ? mWidth : def().mWidth; }
+    constexpr std::size_t getPrecision()   const { return (mPrecision != 0) ? mPrecision : def().mPrecision; }
+    constexpr bool        getZeroPadding() const { return mZeroPadding; }
+    constexpr FormatType  getType()        const { return (mType != FormatType::def) ? mType : def().mType; }
+    constexpr bool        isValid()        const { return mValid; }
+    constexpr std::size_t getStartIndex()  const { return mStartIndex; }
+    constexpr std::size_t getStopIndex()   const { return mStopIndex; }
+    // clang-format on
 
     constexpr static RepFieldData invalid() {
-        RepFieldData result;
-        result.valid = false;
-        return result;
+        return {.mValid = false};
     }
 
     constexpr static RepFieldData def() {
-        RepFieldData result = {.has_zero_padding = false,
-                               .width            = 6,
-                               .precision        = 2,
-                               .type             = FormatType::def};
-        return result;
+        return {.mZeroPadding = false,
+                .mWidth       = 6,
+                .mPrecision   = 2,
+                .mType        = FormatType::def};
     }
 };
 

@@ -26,7 +26,7 @@ consteval std::size_t calc_template_length() {
     std::size_t result = t_s.size();
 
     for (const auto& repFieldData : t_fmt_data) {
-        result -= (repFieldData.stopIndex - repFieldData.startIndex);
+        result -= (repFieldData.getStopIndex() - repFieldData.getStartIndex());
         result += repFieldData.getWidth();
     }
 
@@ -53,7 +53,7 @@ consteval inline auto generate_string_template() {
             inputIt = std::find(inputIt, t_s.end(), '}');
             ++inputIt;
 
-            if (repFieldIt->has_zero_padding)
+            if (repFieldIt->getZeroPadding())
                 std::fill_n(resultIt, repFieldIt->getWidth(), '0');
 
             resultIt += (repFieldIt++)->getWidth();
@@ -76,12 +76,13 @@ consteval inline auto adjust_fmt_data_indices() {
     std::size_t currentOffset = 0;
 
     for (auto& repFieldData : result) {
-        int tempStart = repFieldData.startIndex;
-        int tempStop  = repFieldData.stopIndex;
+        int tempStart = repFieldData.getStartIndex();
+        int tempStop  = repFieldData.getStopIndex();
 
-        repFieldData.startIndex += currentOffset;
-        repFieldData.stopIndex =
-            repFieldData.startIndex + repFieldData.getWidth();
+        repFieldData.setStartIndex(repFieldData.getStartIndex() +
+                                   currentOffset);
+        repFieldData.setStopIndex(repFieldData.getStartIndex() +
+                                  repFieldData.getWidth());
 
         currentOffset -= (tempStop - tempStart);
         currentOffset += repFieldData.getWidth();
@@ -119,7 +120,7 @@ inline auto populate_template(args_t... args) {
  */
 template <std::array t_fmt_data, int I = 0>
 consteval void validate_fmt_data() {
-    static_assert(t_fmt_data[I].valid == true,
+    static_assert(t_fmt_data[I].isValid(),
                   "Syntax error in format specification: ");
 
     // TODO: Various other checks (precision > width, etc.)

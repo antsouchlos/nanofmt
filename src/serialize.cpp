@@ -175,59 +175,60 @@ namespace nanofmt { namespace nanofmt_detail {
 void serialize_unsigned(char* templateStr, uint64_t arg,
                         RepFieldData repFieldData) {
 
-    char* out = templateStr + repFieldData.startIndex;
-    format_base(out, arg, repFieldData.getWidth(), repFieldData.type);
+    char* out = templateStr + repFieldData.getStartIndex();
+    format_base(out, arg, repFieldData.getWidth(), repFieldData.getType());
 }
 
 void serialize_signed(char* templateStr, int64_t arg,
                       RepFieldData repFieldData) {
 
-    char* out = templateStr + repFieldData.startIndex;
+    char* out = templateStr + repFieldData.getStartIndex();
 
     /// Format number
 
     const auto [abs_value, negative] = get_abs_value(arg);
 
-    format_base(templateStr + repFieldData.startIndex + 1 * (negative),
+    format_base(templateStr + repFieldData.getStartIndex() + 1 * (negative),
                 abs_value, repFieldData.getWidth() - 1 * (negative),
-                repFieldData.type);
+                repFieldData.getType());
 
     /// Handle sign
 
     const std::size_t n_digits =
-        count_digits_base(abs_value, repFieldData.type);
+        count_digits_base(abs_value, repFieldData.getType());
 
-    if (repFieldData.has_zero_padding) {
+    if (repFieldData.getZeroPadding()) {
         if (negative) *(out) = '-';
     } else {
         if (n_digits < repFieldData.getWidth())
-            if (negative) *(out + repFieldData.getWidth() - n_digits - 1) = '-';
+            if (negative)
+                *(out + repFieldData.getWidth() - n_digits - 1) = '-';
     }
 }
 
 void serialize_double(char* templateStr, double arg,
                       RepFieldData repFieldData) {
 
-    char* out = templateStr + repFieldData.startIndex;
+    char* out = templateStr + repFieldData.getStartIndex();
 
     // clang-format off
     const RepFieldData fmtDataIntegral = {
-        .has_zero_padding = repFieldData.has_zero_padding,
-        .width            = repFieldData.getWidth() - repFieldData.getPrecision() - 1,
-        .precision        = repFieldData.getPrecision(),
-        .type             = FormatType::d,
-        .valid            = true,
-        .startIndex       = repFieldData.startIndex,
-        .stopIndex        = repFieldData.startIndex + repFieldData.getWidth() - repFieldData.getPrecision() - 1
+        .mZeroPadding = repFieldData.getZeroPadding(),
+        .mWidth       = repFieldData.getWidth() - repFieldData.getPrecision() - 1,
+        .mPrecision   = repFieldData.getPrecision(),
+        .mType        = FormatType::d,
+        .mValid       = true,
+        .mStartIndex  = repFieldData.getStartIndex(),
+        .mStopIndex   = repFieldData.getStartIndex() + repFieldData.getWidth() - repFieldData.getPrecision() - 1
     };
     const RepFieldData fmtDataFractional = {
-        .has_zero_padding = true,
-        .width            = repFieldData.getPrecision(),
-        .precision        = 0, // ignored
-        .type             = FormatType::d,
-        .valid            = true,
-        .startIndex       = repFieldData.startIndex + repFieldData.getWidth() - repFieldData.getPrecision(),
-        .stopIndex        = repFieldData.startIndex + repFieldData.getWidth()
+        .mZeroPadding = true,
+        .mWidth       = repFieldData.getPrecision(),
+        .mPrecision   = 0, // ignored
+        .mType        = FormatType::d,
+        .mValid       = true,
+        .mStartIndex  = repFieldData.getStartIndex() + repFieldData.getWidth() - repFieldData.getPrecision(),
+        .mStopIndex   = repFieldData.getStartIndex() + repFieldData.getWidth()
     };
     // clang-format on
 
