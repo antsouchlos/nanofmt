@@ -91,8 +91,8 @@ consteval inline auto adjust_fmt_data_indices() {
 }
 
 /**
- * @brief Format the arguments according to the format spec and write the into
- * the corresponding placeholder in the preciously generated string template
+ * @brief Format the arguments according to the format spec and write them into
+ * the corresponding placeholder in the previously generated string template
  */
 // TODO: Validate arg types against format specs
 template <std::array t_str_template, std::array t_fmt_data, typename... args_t>
@@ -114,6 +114,9 @@ inline auto populate_template(args_t... args) {
     return result;
 }
 
+/**
+ * @brief Check for syntax errors and semantic errors
+ */
 template <std::array t_fmt_data, int I = 0>
 consteval void validate_fmt_data() {
     static_assert(t_fmt_data[I].valid == true,
@@ -138,7 +141,7 @@ consteval void validate_fmt_data() {
 
 namespace nanofmt {
 
-// TODO: Handle syntax errors
+
 template <nanofmt_detail::ConstString t_s, typename... args_t>
 inline auto format(args_t... args) {
     using namespace nanofmt_detail;
