@@ -41,8 +41,8 @@ consteval std::size_t calc_template_length() {
  */
 template <ConstString t_s, std::array t_fmt_data>
 consteval inline auto generate_string_template() {
-    std::array<char, calc_template_length<t_s, t_fmt_data>()> result;
-    std::fill(result.begin(), result.end(), ' ');
+    std::array<char, calc_template_length<t_s, t_fmt_data>() + 1> result = {0};
+    std::fill(result.begin(), result.end() - 1, ' ');
 
     auto resultIt   = result.begin();
     auto repFieldIt = t_fmt_data.begin();
@@ -155,6 +155,32 @@ inline auto format(args_t... args) {
     return populate_template<templateStr, fmtData>(
         std::forward<args_t>(args)...);
 }
+
+
+namespace nanofmt_detail {
+
+/**
+ * @brief Helper object used to invoke 'format()' with a UDL
+ */
+template <nanofmt_detail::ConstString t_s>
+class const_fmt_literal_obj_t {
+public:
+    template <typename... args_t>
+    constexpr auto operator()(args_t... args) {
+        return format<t_s>(args...);
+    }
+};
+
+} // namespace nanofmt_detail
+
+namespace literals {
+
+template <nanofmt_detail::ConstString t_s>
+constexpr auto operator""_fmt() {
+    return nanofmt_detail::const_fmt_literal_obj_t<t_s>{};
+}
+
+} // namespace literals
 
 
 } // namespace nanofmt

@@ -4,15 +4,19 @@
 
 
 int main() {
-    using namespace nanofmt;
-    
-    auto str = format<"someList: [{:08.2}, 0b{:06b}, {}]\n"
-                      "int: {:6}\n"
-                      "float: {:8.4}\n"
-                      "unsigned: 0x{:07x}">(124.87, 17, 45.3, -2354, 975.2345, 0x67);
+    /// Function call syntax
 
-    for (const auto& c : str)
-        std::cout << c;
+    const auto str = nanofmt::format<"Signed: {:05}\n"
+                                     "Unsigned: {:4}\n"
+                                     "Float: {:08}">(145, -54, -123.4);
 
-    std::cout << std::endl;
+    /// User defined literal syntax
+
+    using namespace nanofmt::literals;
+
+    const auto str2 = "Binary: 0b{:08b}\n"
+                      "Hexadecimal: 0x{:04x}"_fmt(123, 0xfa);
+
+    std::cout << str.data() << std::endl;
+    std::cout << str2.data() << std::endl;
 }
