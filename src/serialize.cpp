@@ -44,6 +44,8 @@ inline int count_digits_decimal(uint64_t n) {
     return t - (n < zero_or_powers_of_10[t]);
 }
 
+// TODO: Do this more memory efficiently (less code duplication, count decimal
+// the same way as the others)
 constexpr inline int count_digits_base(uint64_t n, FormatType formatType) {
     if (formatType == FormatType::b) {
         int result = 0;
@@ -235,8 +237,7 @@ void serialize_double(char* templateStr, double arg,
 
     const uint64_t factor = const_pow(10, repFieldData.precision);
 
-    const int64_t fractional =
-        static_cast<int64_t>((arg - integral) * factor);
+    const int64_t fractional = static_cast<int64_t>((arg - integral) * factor);
 
     const auto [fractional_abs, fractional_negative] =
         get_abs_value(fractional);

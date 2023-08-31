@@ -113,6 +113,16 @@ inline auto populate_template(args_t... args) {
     return result;
 }
 
+template<std::array t_fmt_data, int I = 0>
+consteval void validate_fmt_data() {
+    static_assert(t_fmt_data[I].valid == true, "Syntax error in format specification: ");
+
+    // TODO: Various other checks (precision > width, etc.)
+
+    if constexpr (I+1 < t_fmt_data.size())
+        validate_fmt_data<t_fmt_data, I+1>();
+}
+
 
 }} // namespace nanofmt::nanofmt_detail
 
@@ -132,6 +142,8 @@ inline auto format(args_t... args) {
     using namespace nanofmt_detail;
 
     constexpr auto fmtData     = generate_fmt_data<t_s>();
+    validate_fmt_data<fmtData>();
+
     constexpr auto templateStr = generate_string_template<t_s, fmtData>();
 
     return populate_template<templateStr, fmtData>(
