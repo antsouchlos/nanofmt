@@ -28,7 +28,7 @@ $ ctest --test-dir build/
 
 ## Limitations
 
-For the compile time preprocessing of format strings non non-type template
+For the compile time preprocessing of format strings non-type template
 parameters are heavily relied upon, which means C++20 is required.
 
 Only a limited subset of the `fmtlib` syntax is recognized:
