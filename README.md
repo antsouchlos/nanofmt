@@ -38,4 +38,6 @@ Only a limited subset of the `fmtlib` syntax is recognized:
 Because this library is meant to be used in embedded systems, the design choice
 has been made to not use any dynamic memory allocation.
 This means, however, that no dynamic width can be implemented;
-the number of characters used to represent an element is fixed at compile-time. 
+the number of characters used to represent an element is fixed at compile-time.
+
+There is also no guarantee on the accuracy of serialized floats.
