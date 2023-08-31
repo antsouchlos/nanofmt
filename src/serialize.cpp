@@ -22,10 +22,10 @@ using namespace nanofmt;
 using namespace nanofmt::nanofmt_detail;
 
 
-#define FMT_POWERS_OF_10(factor)                                               \
-    factor * 10, (factor)*100, (factor)*1000, (factor)*10000, (factor)*100000, \
-        (factor)*1000000, (factor)*10000000, (factor)*100000000,               \
-        (factor)*1000000000
+#define FMT_POWERS_OF_10(factor)                                              \
+    factor * 10, (factor)*100, (factor)*1000, (factor)*10000,                 \
+        (factor)*100000, (factor)*1000000, (factor)*10000000,                 \
+        (factor)*100000000, (factor)*1000000000
 
 inline int count_digits_decimal(uint64_t n) {
     // Maps bsr(n) to ceil(log10(pow(2, bsr(n) + 1) - 1)).
@@ -70,7 +70,8 @@ constexpr inline int count_digits_base(uint64_t n, FormatType formatType) {
 
 
 // Converts value in the range [0, base^2) to a string.
-constexpr inline const char* digits2_base(size_t value, FormatType formatType) {
+constexpr inline const char* digits2_base(size_t     value,
+                                          FormatType formatType) {
     // GCC generates slightly better code when value is pointer-size.
     if (formatType == FormatType::b) {
         return &"00011011"[value * 2];
@@ -169,7 +170,16 @@ constexpr std::pair<uint32_t, bool> get_abs_value(int64_t value) {
 namespace nanofmt { namespace nanofmt_detail {
 
 
-void serialize(char* templateStr, int64_t arg, RepFieldData repFieldData) {
+void serialize_unsigned(char* templateStr, uint64_t arg,
+                        RepFieldData repFieldData) {
+
+    char* out = templateStr + repFieldData.startIndex;
+    format_base(out, arg, repFieldData.getWidth(), repFieldData.type);
+}
+
+void serialize_signed(char* templateStr, int64_t arg,
+                      RepFieldData repFieldData) {
+
     char* out = templateStr + repFieldData.startIndex;
 
     /// Format number
@@ -193,52 +203,47 @@ void serialize(char* templateStr, int64_t arg, RepFieldData repFieldData) {
     }
 }
 
-void serialize(char* templateStr, double arg, RepFieldData repFieldData) {
+void serialize_double(char* templateStr, double arg,
+                      RepFieldData repFieldData) {
+
     char* out = templateStr + repFieldData.startIndex;
 
+    // clang-format off
+    const RepFieldData fmtDataIntegral = {
+        .has_zero_padding = repFieldData.has_zero_padding,
+        .width            = repFieldData.width - repFieldData.precision - 1,
+        .precision        = repFieldData.precision,
+        .type             = FormatType::d,
+        .valid            = true,
+        .startIndex       = repFieldData.startIndex,
+        .stopIndex        = repFieldData.startIndex + repFieldData.width - repFieldData.precision - 1
+    };
+    const RepFieldData fmtDataFractional = {
+        .has_zero_padding = true,
+        .width            = repFieldData.precision,
+        .precision        = 0, // ignored
+        .type             = FormatType::d,
+        .valid            = true,
+        .startIndex       = repFieldData.startIndex + repFieldData.width - repFieldData.precision,
+        .stopIndex        = repFieldData.startIndex + repFieldData.width
+    };
+    // clang-format on
 
+    *(out + repFieldData.width - repFieldData.precision - 1) = '.';
+
+    const int64_t integral = static_cast<int64_t>(arg);
+
+    const uint64_t factor = const_pow(10, repFieldData.precision);
+
+    const int64_t fractional =
+        static_cast<int64_t>((arg - integral) * factor);
+
+    const auto [fractional_abs, fractional_negative] =
+        get_abs_value(fractional);
+
+    serialize_signed(templateStr, integral, fmtDataIntegral);
+    serialize_signed(templateStr, fractional_abs, fmtDataFractional);
 }
-
-// template <fmt_data_t t_fmt_node, std::floating_point float_t>
-// constexpr inline void format_float(char* out, float_t value) {
-//     // clang-format off
-//     constexpr fmt_data_t fmt_node_integral = {
-//         t_fmt_node.has_zero_padding,                  // has_zero_padding
-//         t_fmt_node.length - t_fmt_node.precision - 1, // length
-//         t_fmt_node.precision,                         // ignored
-//         FormatType::d,                                // type
-//         t_fmt_node.position                           // ignored
-//     };
-//     constexpr fmt_data_t fmt_node_fractional = {
-//         true,                                         // has_zero_padding
-//         t_fmt_node.precision,                         // length
-//         t_fmt_node.precision,                         // ignored
-//         FormatType::d,                                // type
-//         t_fmt_node.position                           // ignored
-//     };
-//     // clang-format on
-
-//     *(out + t_fmt_node.length - t_fmt_node.precision - 1) = '.';
-
-//     const int integral = static_cast<int>(value);
-
-//     constexpr std::size_t factor = const_pow(10, t_fmt_node.precision);
-//     const int fractional = static_cast<int>((value - integral) * factor);
-
-//     const auto [fractional_abs, fractional_negative] =
-//         get_abs_value(fractional);
-
-//     format_int<fmt_node_integral, int>(out, integral);
-//     format_int<fmt_node_fractional, uint16_t>(
-//         out + t_fmt_node.length - t_fmt_node.precision, fractional_abs);
-// }
-
-
-// void serialize(char* templateStr, unsigned long long arg, RepFieldData repFieldData) {
-//     char* out = templateStr + repFieldData.startIndex;
-
-//     format_base(out, arg, repFieldData.getWidth(), repFieldData.type);
-// }
 
 
 }} // namespace nanofmt::nanofmt_detail
