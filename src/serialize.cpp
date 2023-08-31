@@ -9,7 +9,7 @@
 /*
  *
  * ****************************************************************
- * Disclaimer: Most of this code is shamelessly stolen from fmtlib
+ * Disclaimer: Some of this code is shamelessly stolen from fmtlib
  * ****************************************************************
  *
  */
