@@ -99,10 +99,14 @@ consteval inline auto adjust_fmt_data_indices() {
 template <std::array t_str_template, std::array t_fmt_data, typename... args_t>
 inline auto populate_template(args_t... args) {
     /// Adjust the start and stop indices to match the output instead of the
-    /// input
+    /// input string
     constexpr auto fmtDataAdjusted = adjust_fmt_data_indices<t_fmt_data>();
 
     std::array<char, t_str_template.size()> result = t_str_template;
+
+    static_assert(sizeof...(args_t) == fmtDataAdjusted.size(),
+                  "The number of arguments has to match the number of "
+                  "replacement fields");
 
     int repFieldIndex = 0;
     (
@@ -120,8 +124,9 @@ inline auto populate_template(args_t... args) {
  */
 template <std::array t_fmt_data, int I = 0>
 consteval void validate_fmt_data() {
-    static_assert(t_fmt_data[I].isValid(),
-                  "Syntax error in format specification: ");
+    if constexpr (t_fmt_data.size() > I)
+        static_assert(t_fmt_data[I].isValid(),
+                      "Syntax error in format specification: ");
 
     // TODO: Various other checks (precision > width, etc.)
 
