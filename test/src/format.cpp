@@ -13,7 +13,7 @@ TEST(Format, template_str) {
     constexpr auto str =
         nanofmt::nanofmt_detail::generate_string_template<constStr, fmtData>();
 
-    nanofmt::nanofmt_detail::ConstString expected{"This is a 00000000 test. And another   one 0000"};
+    nanofmt::nanofmt_detail::ConstString expected{"This is a 00000000 test. And another   one 0000\0"};
 
     ASSERT_EQ(str.size(), expected.size());
 
