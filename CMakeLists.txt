@@ -10,8 +10,7 @@ endif()
 add_library(nanofmt src/serialize.cpp)
 target_include_directories(nanofmt PUBLIC include)
 
-get_directory_property(hasParent PARENT_DIRECTORY)
-if(!hasParent)
+if(PROJECT_IS_TOP_LEVEL)
     #
     # Build as standalone project
     #
